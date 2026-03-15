@@ -42,6 +42,10 @@ private:
     }
 
 public:
+    // Constructor — takes a unique ID and raw text line like "1.5 2.3 4.0"
+    // Calls lineToVec() to parse the line into coordinates
+    // Sets clusterId = 0 meaning unassigned initially
+    // dimensions = number of coordinates found in the line
     Point(int id, string line)
     {
         pointId = id;
@@ -69,6 +73,9 @@ private:
     vector<Point> points;
 
 public:
+    // Creates a cluster with given ID and an initial centroid point
+    // Copies centroid coordinates into this->centroid vector
+    // Also adds the centroid point itself into the cluster's points list
     Cluster(int clusterId, Point centroid)
     {
         this->clusterId = clusterId;
@@ -79,12 +86,14 @@ public:
         this->addPoint(centroid);
     }
 
+    // Adds a point to the cluster's points list and sets the point's clusterId to this cluster's ID
     void addPoint(Point p)
     {
         p.setCluster(this->clusterId);
         points.push_back(p);
     }
 
+    // Removes a point with given ID from the cluster's points list
     bool removePoint(int pointId)
     {
         int size = points.size();
@@ -120,6 +129,9 @@ private:
     vector<Cluster> clusters;
     string output_dir;
 
+    // Removes all points from every cluster
+    // Called before reassigning points in each iteration
+    // Does NOT delete centroids — only empties the point lists
     void clearClusters()
     {
         for (int i = 0; i < K; i++)
@@ -127,7 +139,7 @@ private:
             clusters[i].removeAllPoints();
         }
     }
-
+    // Function to find the nearest cluster for a given point
     int getNearestClusterId(Point point)
     {
         double sum = 0.0, min_dist;
@@ -187,7 +199,16 @@ public:
         total_points = all_points.size();
         dimensions = all_points[0].getDimensions();
 
+        // Main K-Means loop — runs until convergence or max iterations
+        // Each iteration:
+        //   1. Assign each point to nearest cluster
+        //   2. Clear old cluster assignments
+        //   3. Reassign points to updated clusters
+        //   4. Recalculate centroid as mean of all points in cluster
+        // 'done' flag turns false if any point changed its cluster
+
         // Initializing Clusters
+        
         vector<int> used_pointIds;
 
         for (int i = 1; i <= K; i++)
@@ -232,7 +253,7 @@ public:
                 }
             }
 
-            // clear all existing clusters
+            // Clear points from each cluster for new assignment
             clearClusters();
 
             // reassign points to their new clusters
@@ -305,6 +326,7 @@ public:
         }
     }
 };
+
 
 int main(int argc, char **argv)
 {
