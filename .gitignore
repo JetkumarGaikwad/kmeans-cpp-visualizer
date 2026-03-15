@@ -1,0 +1,2 @@
+g++ -o kmeans kmeans.cpp -std=c++11
+kmeans.exe iris.csv 3 cluster-details
