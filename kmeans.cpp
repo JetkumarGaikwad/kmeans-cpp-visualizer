@@ -357,8 +357,33 @@ int main(int argc, char **argv)
     vector<Point> all_points;
     string line;
 
+    bool isFirstLine = true;
     while (getline(infile, line))
     {
+        // Skip header line
+        if (isFirstLine) { isFirstLine = false; continue; }
+
+        // Remove last column if it's a text label (e.g. "Iris-setosa")
+        // Find last comma and trim everything after it
+        size_t lastComma = line.find_last_of(',');
+        if (lastComma != string::npos)
+        {
+            // Check if last column is non-numeric (contains a letter)
+            string lastCol = line.substr(lastComma + 1);
+            bool isText = false;
+            for (char c : lastCol)
+                if (isalpha(c)) { isText = true; break; }
+            
+            if (isText) line = line.substr(0, lastComma);
+        }
+
+        // Remove first column (Id column) — strip everything before first comma
+        size_t firstComma = line.find_first_of(',');
+        if (firstComma != string::npos)
+        {
+            line = line.substr(firstComma + 1);
+        }
+
         Point point(pointId, line);
         all_points.push_back(point);
         pointId++;
