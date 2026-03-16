@@ -350,6 +350,20 @@ public:
         {
             cout << "Error: Unable to write to clusters.txt";
         }
+        // Calculate WCSS — sum of squared distances of each point from its centroid
+        double wcss = 0.0;
+        for (int i = 0; i < K; i++)
+        {
+            for (int j = 0; j < clusters[i].getSize(); j++)
+            {
+                for (int d = 0; d < dimensions; d++)
+                {
+                    double diff = clusters[i].getPoint(j).getVal(d) - clusters[i].getCentroidByPos(d);
+                    wcss += diff * diff;
+                }
+            }
+        }
+        cout << "WCSS for K=" << K << " : " << wcss << endl;
     }
 };
 
@@ -429,8 +443,12 @@ int main(int argc, char **argv)
     // Running K-Means Clustering
     int iters = 100;
 
-    KMeans kmeans(K, iters, output_dir);
-    kmeans.run(all_points);
-
+    // Elbow Method — run for K=1 to K=8, print WCSS for each
+    cout << "\n--- Elbow Method ---" << endl;
+    for (int k = 1; k <= 8; k++)
+    {
+        KMeans kmeans(k, iters, output_dir);
+        kmeans.run(all_points);
+    }
     return 0;
 }
