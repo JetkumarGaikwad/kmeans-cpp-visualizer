@@ -187,6 +187,51 @@ private:
         return NearestClusterId;
     }
 
+    void printASCII(vector<Point>& all_points)
+    {
+        // Use dimensions 2 and 3 (Petal Length vs Petal Width)
+        // Works for any dataset with 4+ dimensions
+        int dimX = 2, dimY = 3;
+        int gridW = 60, gridH = 20;
+
+        // Find min/max for scaling
+        double minX = 1e18, maxX = -1e18;
+        double minY = 1e18, maxY = -1e18;
+        for (auto& p : all_points)
+        {
+            if (p.getVal(dimX) < minX) minX = p.getVal(dimX);
+            if (p.getVal(dimX) > maxX) maxX = p.getVal(dimX);
+            if (p.getVal(dimY) < minY) minY = p.getVal(dimY);
+            if (p.getVal(dimY) > maxY) maxY = p.getVal(dimY);
+        }
+
+        // Create empty grid
+        vector<vector<char>> grid(gridH, vector<char>(gridW, '.'));
+
+        // Plot each point
+        for (auto& p : all_points)
+        {
+            int x = (int)((p.getVal(dimX) - minX) / (maxX - minX) * (gridW - 1));
+            int y = (int)((p.getVal(dimY) - minY) / (maxY - minY) * (gridH - 1));
+            y = (gridH - 1) - y; // flip Y axis
+            grid[y][x] = '0' + p.getCluster();
+        }
+
+        // Print grid
+        cout << "\n=== ASCII Cluster Visualization ===" << endl;
+        cout << "    (Petal Length vs Petal Width)" << endl;
+        cout << string(gridW + 4, '-') << endl;
+        for (int i = 0; i < gridH; i++)
+        {
+            cout << "| ";
+            for (int j = 0; j < gridW; j++)
+                cout << grid[i][j];
+            cout << " |" << endl;
+        }
+        cout << string(gridW + 4, '-') << endl;
+        cout << "  Cluster 1=Setosa  2=Versicolor  3=Virginica" << endl;
+    }
+
 public:
     KMeans(int K, int iterations, string output_dir)
     {
@@ -317,7 +362,8 @@ public:
             }
             iter++;
         }
-
+        // Print ASCII visualization
+        printASCII(all_points);
         ofstream pointsFile;
         pointsFile.open(output_dir + "/" + to_string(K) + "-points.txt", ios::out);
 
