@@ -4,6 +4,7 @@
 #include <fstream>
 #include <iostream>
 #include <vector>
+#include<ctime>
 
 using namespace std;
 
@@ -207,26 +208,51 @@ public:
         //   4. Recalculate centroid as mean of all points in cluster
         // 'done' flag turns false if any point changed its cluster
 
-        // Initializing Clusters
-        
-        vector<int> used_pointIds;
+         // K-Means++ Initialization
+        // Step 1 — Pick first centroid randomly
+        srand(time(0));
+        int firstIndex = rand() % total_points;
+        all_points[firstIndex].setCluster(1);
+        Cluster firstCluster(1, all_points[firstIndex]);
+        clusters.push_back(firstCluster);
 
-        for (int i = 1; i <= K; i++)
+        // Step 2 — Pick remaining centroids with probability proportional to distance squared
+        for (int i = 2; i <= K; i++)
         {
-            while (true)
-            {
-                int index = rand() % total_points;
+            // Calculate distance squared from each point to nearest existing centroid
+            vector<double> distances(total_points);
+            double totalDist = 0.0;
 
-                if (find(used_pointIds.begin(), used_pointIds.end(), index) ==
-                    used_pointIds.end())
+            for (int j = 0; j < total_points; j++)
+            {
+                double minDist = 1e18;
+                for (int c = 0; c < (int)clusters.size(); c++)
                 {
-                    used_pointIds.push_back(index);
-                    all_points[index].setCluster(i);
-                    Cluster cluster(i, all_points[index]);
-                    clusters.push_back(cluster);
-                    break;
+                    double dist = 0.0;
+                    for (int d = 0; d < dimensions; d++)
+                    {
+                        double diff = clusters[c].getCentroidByPos(d) - all_points[j].getVal(d);
+                        dist += diff * diff;
+                    }
+                    if (dist < minDist) minDist = dist;
                 }
+                distances[j] = minDist;
+                totalDist += minDist;
             }
+
+            // Pick next centroid — farther points have higher probability
+            double threshold = ((double)rand() / RAND_MAX) * totalDist;
+            double cumulative = 0.0;
+            int nextIndex = 0;
+            for (int j = 0; j < total_points; j++)
+            {
+                cumulative += distances[j];
+                if (cumulative >= threshold) { nextIndex = j; break; }
+            }
+
+            all_points[nextIndex].setCluster(i);
+            Cluster newCluster(i, all_points[nextIndex]);
+            clusters.push_back(newCluster);
         }
         cout << "Clusters initialized = " << clusters.size() << endl
              << endl;
